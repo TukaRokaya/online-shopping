@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Shopping</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://khalti.com/static/khalti-checkout.js"></script>
+  <style>
+    .card {
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: scale(1.03);
+    }
+    .cart-container {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+    }
+    .cart-items {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      display: none;
+    }
+    .product-details-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 20px;
+      border: 2px solid #333;
+      z-index: 2000;
+      display: none;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .product-details-box h4 {
+      margin-bottom: 10px;
+    }
+    .product-details-box .close-btn {
+      float: right;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    footer {
+      background: black;
+      font-color:;
+      padding: 20px 0;
+      margin-top: 50px;
+    }
+    .search-bar {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="cart-container">
+    <button class="btn btn-success" onclick="toggleCart()">🛒 Cart (<span id="cart-count">0</span>)</button>
+    <div class="cart-items" id="cart-items"></div>
+    <button class="btn btn-warning mt-2" onclick="placeOrder()">🧾 Place Order</button>
+    <button class="btn btn-info mt-2" onclick="payWithKhalti()">💳 Pay with Khalti</button>
+  </div>
+
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">🛍️ online shopping lamahi</h1>
+
+    <div class="row search-bar">
+      <div class="col-md-6 offset-md-3">
+ <input type="text" class="form-control" id="searchInput" placeholder="🔍 Search products..." oninput="searchProducts()">            </div>
+    </div>
+
+    <div class="row" id="product-list"></div>
+  </div>
+
+  <div id="product-details" class="product-details-box">
+    <span class="close-btn" onclick="hideDetails()">&times;</span>
+    <h4 id="detail-name"></h4>
+    <p id="detail-description"></p>
+    <p><strong>Price:</strong> Rs. <span id="detail-price"></span></p>
+    <p><strong>Category:</strong> <span id="detail-category"></span></p>
+    <p><strong>Manufactured:</strong> <span id="detail-mfg"></span></p>
+    <p><strong>Expires:</strong> <span id="detail-exp"></span></p>
+    <p><strong>Location:</strong> <span id="detail-location"></span></p>
+  </div>
+
+  <footer class="text-center">
+    <p>&copy; 2025 Tuka's Shop | Contact: info@tukashop.com | number:982292....</p>
+  </footer>
+
+  <script>
+    const products = [
+      { id: 1, name: "New unique design t-shirt available #deliveryallovernepal🇳🇵 #freesize #goviral #ladies", price: 1200, image: "b.png", category: "Clothing", description: "Comfortable cotton t-shirt.", mfg: "2024-01-15", exp: "2027-01-15", location: "Kathmandu" },
+      { id: 2, name: "Women Jeans - Buy Stylish Jeans for Women in nepal ", price: 2200, image: "s.png", category: "Clothing", description: "Slim fit blue jeans.", mfg: "2023-12-10", exp: "2026-12-10", location: "Lalitpur" },
+      { id: 3, name: "Buy Metro Girls Pink Casual Sandals Online ", price: 3200, image: "c.png", category: "Shoes", description: "Sporty and stylish sneakers.", mfg: "2024-02-01", exp: "2026-02-01", location: "Pokhara" },
+      { id: 4, name: "Juta discount online price in my  page", price: 500, image: "sho.png", category: "Accessories", description: "Cool and comfortable cap.", mfg: "2024-03-05", exp: "2026-03-05", location: "Biratnagar" },
+      { id: 5, name: "Buy Sandals Online at Best Price in Nepal", price: 1500, image: "san.png", category: "Bags", description: "Durable travel backpack.", mfg: "2024-01-20", exp: "2026-01-20", location: "Butwal" },
+      { id: 6, name: "Bollywood designer sequins saree", price: 2500, image: "sa.png", category: "Accessories", description: "Stylish analog watch.", mfg: "2023-11-11", exp: "2026-11-11", location: "Chitwan" },
+      { id: 7, name: "Beautiful kurti designs for young girls | Trendy kurta designs | Latest Kurti and Kurta designs 2082 ", price: 1800, image: "su.png", category: "Accessories", description: "UV-protected sunglasses.", mfg: "2024-04-01", exp: "2026-04-01", location: "Nepalgunj" },
+      { id: 8, name: "Camera Images – Browse 8,526,394 Stock Photos, Vectors, and Video | Adobe Stock", price: 2000, image: "cma.png", category: "Clothing", description: "Warm and cozy hoodie.", mfg: "2024-02-18", exp: "2026-02-18", location: "Dharan" },
+      { id: 9, name: "4 Best plazo kurti design ideas | kurti designs, long kurti designs, kurti designs party wear", price: 1000, image: "ss.png", category: "Shoes", description: "Comfortable walking sandals.", mfg: "2024-03-10", exp: "2026-03-10", location: "Hetauda" },
+      { id: 10, name: "Buy Cute Necklaces for Girls Online in nepal  ", price: 800, image: "net.png", category: "Accessories", description: "Leather wallet.", mfg: "2024-01-05", exp: "2026-01-05", location: "Dang" }
+    ];
+
+    const cart = [];
+    const productList = document.getElementById("product-list");
+    const cartCount = document.getElementById("cart-count");
+    const cartItems = document.getElementById("cart-items");
+
+    function renderProducts(filter = "") {
+      productList.innerHTML = "";
+      const filtered = products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+      filtered.forEach((product) => {
+        const card = document.createElement("div");
+        card.className = "col-md-4 mb-4";
+        card.innerHTML = `
+          <div class="card h-100" onclick="showDetails(${product.id})">
+            <img src="${product.image}" class="card-img-top" alt="${product.name}">
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">${product.name}</h5>
+              <p class="card-text">${product.description}</p>
+              <p class="card-text">Price: Rs. ${product.price}</p>
+              <button class="btn btn-primary mt-auto" onclick="event.stopPropagation(); addToCart(${product.id})">Add to Cart</button>
+            </div>
+          </div>
+        `;
+        productList.appendChild(card);
+      });
+    }
+
+    function showDetails(productId) {
+      const product = products.find(p => p.id === productId);
+      document.getElementById("detail-name").textContent = product.name;
+      document.getElementById("detail-description").textContent = product.description;
+      document.getElementById("detail-price").textContent = product.price;
+      document.getElementById("detail-category").textContent = product.category;
+      document.getElementById("detail-mfg").textContent = product.mfg;
+      document.getElementById("detail-exp").textContent = product.exp;
+      document.getElementById("detail-location").textContent = product.location;
+      document.getElementById("product-details").style.display = "block";
+    }
+
+    function hideDetails() {
+      document.getElementById("product-details").style.display = "none";
+    }
+
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      cart.push(product);
+      updateCart();
+      alert(product.name + " added to cart!");
+    }
+
+    function updateCart() {
+      cartCount.textContent = cart.length;
+      cartItems.innerHTML = cart.map(p => `<div>${p.name} - Rs. ${p.price}</div>`).join('');
+    }
+
+    function toggleCart() {
+      cartItems.style.display = cartItems.style.display === "block" ? "none" : "block";
+    }
+
+    function searchProducts() {
+      const input = document.getElementById("searchInput").value;
+      renderProducts(input);
+    }
+
+    function placeOrder() {
+      if (cart.length === 0) {
+        alert("Your cart is empty!");
+        return;
+      }
+      let total = cart.reduce((sum, item) => sum + item.price, 0);
+      const orderDetails = cart.map(p => `${p.name} - Rs. ${p.price}`).join('\n');
+      alert(`Thank you for your order!\n\nItems:\n${orderDetails}\n\nTotal: Rs. ${total}\n\nYou will receive a confirmation email shortly.`);
+      cart.length = 0;
+      updateCart();
+    }
+
+    function payWithKhalti() {
+      let totalAmount = cart.reduce((sum, item) => sum + item.price, 0) * 100;
+      var config = {
+        "publicKey": "test_public_key_dc74e6f39854436ca7b03c9a49d6b53d",
+        "productIdentity": "1234567890",
+        "productName": "Tuka Cart",
+        "productUrl": "http://localhost:3000",
+        "paymentPreference": ["KHALTI"],
+        "eventHandler": {
+          onSuccess(payload) {
+            alert("Payment Successful! Txn ID: " + payload.idx);
+            cart.length = 0;
+            updateCart();
+          },
+          onError(error) {
+            alert("Payment failed! " + error.message);
+          },
+          onClose() {
+            console.log('Payment widget is closing');
+          }
+        }
+      };
+      var checkout = new KhaltiCheckout(config);
+      checkout.show({ amount: totalAmount });
+    }
+
+    renderProducts();
+
+  function updateCart() {
+  cartCount.textContent = cart.length;
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  cartItems.innerHTML = cart.map(p => `<div>${p.name} - Rs. ${p.price}</div>`).join('') +
+                        `<hr><strong>जम्मा: Rs. ${total}</strong>`;
+}
+function updateCart() {
+  cartCount.textContent = cart.length;
+  cartItems.innerHTML = cart.map((p, i) =>
+    `<div>${p.name} - Rs. ${p.price} <button class="btn btn-sm btn-danger" onclick="removeFromCart(${i})">x</button></div>`
+  ).join('');
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  updateCart();
+}
+
+</script>
+
+</body>
+</html>
